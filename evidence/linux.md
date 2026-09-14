@@ -173,4 +173,97 @@ PostgreSQL init process complete; ready for start up.
 2026-09-14 17:32:54.582 UTC [62] LOG:  checkpoint complete: wrote 1619 buffers (9.9%); 0 WAL file(s) added, 0 removed, 2 recycled; write=161.550 s, sync=0.014 s, total=161.983 s; sync files=70, longest=0.004 s, average=0.001 s; distance=23925 kB, estimate=23925 kB; lsn=0/3303DC8, redo lsn=0/307C7D0
 mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$
 
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ kubectl get deployments -n minipay
+NAME          READY   UP-TO-DATE   AVAILABLE   AGE
+minipay-api   2/2     2            2           88s
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ kubectl logs deployments/minipay-api -n minipay --tail=100
+Found 2 pods, using pod/minipay-api-75c9c94498-8bqsk
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+INFO:     10.244.0.1:57830 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:51410 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:51418 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:37068 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:37082 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:37084 - "GET /health HTTP/1.1" 503 Service Unavailable
+INFO:     10.244.0.1:48830 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:48846 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:48858 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:38848 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:38858 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:38870 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:40638 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:40652 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:40666 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43136 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43148 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43156 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:53476 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:53486 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:53494 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43144 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43156 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:43164 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:41946 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:41950 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:41958 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:59538 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:59546 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:59552 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:36760 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:36776 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:36788 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:33998 - "GET /health HTTP/1.1" 200 OK
+
+
+
+6) identifying the process consuming the most memory
+
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ ps aux --sort=-%mem | head
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+mahad       5987  0.0  0.6 1321044 52516 pts/2   Sl   23:21   0:00 kubectl -n minipay port-forward svc/minipay-api 8080:80
+root        1788  0.0  0.3 1287532 29120 pts/3   Ssl+ 22:24   0:02 /run/docker-desktop/docker-desktop-user-distro proxy --distro-name Ubuntu --docker-desktop-root /mnt/wsl/docker-desktop C:\Users\Personal\AppData\Local\Programs\DockerDesktop\resources
+root         253  0.0  0.3 123456 26400 ?        Ssl  21:49   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root         199  0.0  0.2  44092 23400 ?        Ss   21:49   0:00 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
+root        6035  0.0  0.1 1866288 15208 ?       Ssl  23:23   0:00 /usr/libexec/wsl-pro-service
+root           1  0.0  0.1  24508 14752 ?        Ss   21:49   0:01 /sbin/init
+root          63  0.0  0.1  50392 14040 ?        S<s  21:49   0:00 /usr/lib/systemd/systemd-journald
+systemd+      97  0.0  0.1  22540 13928 ?        Ss   21:49   0:00 /usr/lib/systemd/systemd-resolved
+mahad        533  0.0  0.1  22688 12608 ?        Ss   21:49   0:00 /usr/lib/systemd/systemd --user
+
+7) identifying disk usage by directory
+
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ du -sh */
+16K     app/
+64K     evidence/
+12K     investigation/
+12K     kubernetes/
+12K     sql/
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$
+
+8) a simple repeatable health-check script.
+#!/usr/bin/env bash
+set -u
+
+URL="${1:-http://localhost:8080/health}"
+
+if curl --fail --silent --show-error --max-time 5 "$URL" >/dev/null; then
+    echo "Health check passed: $URL"
+    exit 0
+fi
+
+echo "Health check failed: $URL" >&2
+exit 1
+ 
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ mkdir scripts
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ cd scripts/
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$ ls
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$ nano healthcheck.sh
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$ chmod +x healthcheck.sh
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$ ./healthcheck.sh
+Health check passed: http://localhost:8080/health
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$
+
 

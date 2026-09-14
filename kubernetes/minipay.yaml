@@ -1,0 +1,203 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minipay
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minipay-db
+  namespace: minipay
+type: Opaque
+stringData:
+  POSTGRES_DB: minipay
+  POSTGRES_USER: minipay
+  POSTGRES_PASSWORD: change-me-in-real-env
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minipay-db-init
+  namespace: minipay
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS customers (
+      id BIGSERIAL PRIMARY KEY,
+      customer_ref VARCHAR(40) NOT NULL UNIQUE,
+      name VARCHAR(120) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id BIGSERIAL PRIMARY KEY,
+      transaction_ref VARCHAR(50) NOT NULL,
+      customer_id BIGINT NOT NULL REFERENCES customers(id),
+      amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+      status VARCHAR(20) NOT NULL CHECK (status IN ('PROCESSING','SUCCESS','FAILED')),
+      created_at TIMESTAMP NOT NULL,
+      completed_at TIMESTAMP NULL,
+      failure_code VARCHAR(40) NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS callbacks (
+      id BIGSERIAL PRIMARY KEY,
+      transaction_id BIGINT NOT NULL REFERENCES transactions(id),
+      attempt_no INTEGER NOT NULL,
+      http_status INTEGER NULL,
+      callback_status VARCHAR(20) NOT NULL CHECK (callback_status IN ('SUCCESS','FAILED')),
+      attempted_at TIMESTAMP NOT NULL,
+      UNIQUE(transaction_id, attempt_no)
+    );
+
+    INSERT INTO customers(customer_ref, name)
+    VALUES ('CUST000001', 'Demo Customer')
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO transactions(transaction_ref, customer_id, amount, status, created_at, completed_at)
+    SELECT 'TXN00000001', id, 25.00, 'SUCCESS', CURRENT_TIMESTAMP - INTERVAL '2 minutes', CURRENT_TIMESTAMP - INTERVAL '1 minute'
+    FROM customers
+    WHERE customer_ref = 'CUST000001'
+    ON CONFLICT DO NOTHING;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minipay-db
+  namespace: minipay
+spec:
+  clusterIP: None
+  selector:
+    app: minipay-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minipay-db
+  namespace: minipay
+spec:
+  serviceName: minipay-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minipay-db
+  template:
+    metadata:
+      labels:
+        app: minipay-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: minipay-db
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minipay-db
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minipay-db
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: init
+          configMap:
+            name: minipay-db-init
+  volumeClaimTemplates:
+    - metadata:
+        name: db-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minipay-api
+  namespace: minipay
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: minipay-api
+  template:
+    metadata:
+      labels:
+        app: minipay-api
+    spec:
+      containers:
+        - name: api
+          image: minipay-api:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              value: postgresql://minipay:change-me-in-real-env@minipay-db.minipay.svc.cluster.local:5432/minipay
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minipay-api
+  namespace: minipay
+spec:
+  selector:
+    app: minipay-api
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30080

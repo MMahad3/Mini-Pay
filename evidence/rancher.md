@@ -2,10 +2,17 @@
 
 This document records the Docker and Rancher startup investigation performed alongside the Mini-Pay deployment.
 
+## Evidence Context
+
+The commands were run locally by user `mahad` on host `DESKTOP-BFCF70D` from `/mnt/g/Paysus/paysys-implementation-l2-assessment`. The complete original session transcript is preserved below so the shell prompt, working directory, command history, and raw Docker output remain traceable.
+
 ## Initial Minikube and Docker Permission Failure
 
-```text
+```bash
 mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ minikube start --driver=docker --cpus=4 --memory=4096
+```
+
+```text
 💡  Suggestion: Add your user to the 'docker' group: 'sudo usermod -aG docker $USER && newgrp docker'
  📘  Documentation: https://docs.docker.com/engine/install/linux-postinstall/
 ```
@@ -14,17 +21,15 @@ The current user could not access the Docker socket without elevated privileges.
 
 ## Rancher Startup Without Privileged Mode
 
-```text
+```bash
 mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ docker run -d --restart=unless-stopped \
   -p 80:80 -p 443:443 \
   --name rancher \
   rancher/rancher:v2.9.2
-permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock
+```
 
-mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo docker run -d --restart=unless-stopped \
-  -p 80:80 -p 443:443 \
-  --name rancher \
-  rancher/rancher:v2.9.2
+```text
+permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock
 ```
 
 The container started downloading successfully, but then entered a restart loop because Rancher requires privileged mode when run outside Kubernetes.
@@ -59,6 +64,12 @@ bd250f5d6665   postgres:16              "docker-entrypoint.s…" 22 minutes ago 
 ```
 
 Rancher was running with ports `80` and `443` published after privileged mode was enabled.
+
+## Full Session Transcript
+
+The original terminal transcript is retained verbatim below as supporting evidence.
+
+```text
 mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ minikube start --driver=docker --cpus=4 --memory=4096
 😄  minikube v1.39.0 on Ubuntu 26.04 (kvm/amd64)
 ✨  Using the docker driver based on user configuration
@@ -134,3 +145,4 @@ mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo do
 CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS          PORTS                                                                          NAMES
 682d164ba64d   rancher/rancher:v2.9.2   "entrypoint.sh"          14 seconds ago   Up 3 seconds    0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp   rancher
 bd250f5d6665   postgres:16              "docker-entrypoint.s…"   22 minutes ago   Up 22 minutes   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp                                    minipay-db
+```

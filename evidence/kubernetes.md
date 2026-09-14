@@ -2,6 +2,10 @@
 
 This document records the commands and output used to build, deploy, troubleshoot, and validate Mini-Pay in Minikube.
 
+## Evidence Context
+
+The commands were run locally by user `mahad` on host `DESKTOP-BFCF70D` from `~/paysys/Mini-Pay`. The complete original session transcript is preserved below so the shell prompt, working directory, command history, and raw output remain traceable.
+
 ## Build the Application Image
 
 ### Initial build attempt
@@ -79,6 +83,12 @@ Final pod status:
 | `minipay-db-0` | `1/1` | `Running` |
 
 The API health endpoint returned `{"status":"ok","database":"ok"}` after the database became ready.
+
+## Full Session Transcript
+
+The original terminal transcript is retained verbatim below as supporting evidence.
+
+```text
 mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ minikube image build -t minipay-api:local .
 #1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile: 253B done
@@ -606,3 +616,4 @@ INFO:     10.244.0.1:53338 - "GET /health HTTP/1.1" 200 OK
 INFO:     10.244.0.1:53346 - "GET /health HTTP/1.1" 200 OK
 INFO:     10.244.0.1:38908 - "GET /health HTTP/1.1" 200 OK
 mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$
+```

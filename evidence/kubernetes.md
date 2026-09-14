@@ -1,3 +1,84 @@
+# Kubernetes Deployment Evidence
+
+This document records the commands and output used to build, deploy, troubleshoot, and validate Mini-Pay in Minikube.
+
+## Build the Application Image
+
+### Initial build attempt
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ minikube image build -t minipay-api:local .
+error: failed to solve: failed to compute cache key: failed to calculate checksum of ref o6bmybsi6jopdei7b1xy72yjg::wlr6w4wuhtshpdn11ypg7zt9j: "/requirements.txt": not found
+ ------
+  > [3/5] COPY requirements.txt ./:
+--------------------
+    3 |     WORKDIR /app
+    4 |
+    5 | >>> COPY requirements.txt ./
+error: failed to solve: failed to compute cache key: failed to calculate checksum of ref o6bmybsi6jopdei7b1xy72yjg::wlr6w4wuhtshpdn11ypg7zt9j: "/requirements.txt": not found
+```
+
+### Successful build
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ minikube image build -t minipay-api:local .
+#10 DONE 2.3s
+```
+
+The image was built successfully as `minipay-api:local`.
+
+## Deploy to Kubernetes
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ docker logs  container-id  2>&1 | grep "Bootstrap Password:"
+deployment.apps/minipay-api created
+service/minipay-api created
+```
+
+## Initial Pod and Service Status
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ kubectl get pods -n minipay
+minipay-db    ClusterIP   None            <none>        5432/TCP       27s
+```
+
+## Rollout and Log Validation
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ kubectl -n minipay rollout status statefulset/minipay-db --timeout=180s
+2026-09-14 18:15:53.804 UTC [1] LOG:  database system is ready to accept connections
+```
+
+The database completed initialization and became ready to accept connections.
+
+## Service Access Troubleshooting
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ ^[[200~minikube service minipay-api -n minipay --url~^C
+error: unknown shorthand flag: 'd' in -d
+ See 'kubectl port-forward --help' for usage.
+```
+
+The NodePort and Minikube service URL were not reachable from the current shell, so port forwarding was used instead.
+
+## Final Health Check
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ kubectl -n minipay port-forward svc/minipay-api 8080:80 > /tmp/minipay-port-forward.log 2>&1 &
+INFO:     10.244.0.1:36776 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:36788 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:33998 - "GET /health HTTP/1.1" 200 OK
+```
+
+Final pod status:
+
+| Workload | Ready | Status |
+| --- | ---: | --- |
+| `minipay-api` replica 1 | `1/1` | `Running` |
+| `minipay-api` replica 2 | `1/1` | `Running` |
+| `minipay-db-0` | `1/1` | `Running` |
+
+The API health endpoint returned `{"status":"ok","database":"ok"}` after the database became ready.
 mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ minikube image build -t minipay-api:local .
 #1 [internal] load build definition from Dockerfile
 #1 transferring dockerfile: 253B done

@@ -1,3 +1,64 @@
+# Rancher Deployment Evidence
+
+This document records the Docker and Rancher startup investigation performed alongside the Mini-Pay deployment.
+
+## Initial Minikube and Docker Permission Failure
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ minikube start --driver=docker --cpus=4 --memory=4096
+💡  Suggestion: Add your user to the 'docker' group: 'sudo usermod -aG docker $USER && newgrp docker'
+ 📘  Documentation: https://docs.docker.com/engine/install/linux-postinstall/
+```
+
+The current user could not access the Docker socket without elevated privileges.
+
+## Rancher Startup Without Privileged Mode
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ docker run -d --restart=unless-stopped \
+  -p 80:80 -p 443:443 \
+  --name rancher \
+  rancher/rancher:v2.9.2
+permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock
+
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo docker run -d --restart=unless-stopped \
+  -p 80:80 -p 443:443 \
+  --name rancher \
+  rancher/rancher:v2.9.2
+```
+
+The container started downloading successfully, but then entered a restart loop because Rancher requires privileged mode when run outside Kubernetes.
+
+## Rancher Log Output
+
+```text
+ERROR: Rancher must be ran with the --privileged flag when running outside of Kubernetes
+```
+
+## Corrected Rancher Startup
+
+The failed container was removed and recreated with `--privileged`:
+
+```bash
+sudo docker rm -f rancher
+
+sudo docker run -d --restart=unless-stopped \
+  --privileged \
+  -p 80:80 -p 443:443 \
+  --name rancher \
+  rancher/rancher:v2.9.2
+```
+
+## Final Container Status
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo docker ps
+CONTAINER ID   IMAGE                    COMMAND          CREATED       STATUS       PORTS                                                                          NAMES
+682d164ba64d   rancher/rancher:v2.9.2   "entrypoint.sh"  14 seconds ago Up 3 seconds 0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:443->443/tcp, [::]:443->443/tcp rancher
+bd250f5d6665   postgres:16              "docker-entrypoint.s…" 22 minutes ago Up 22 minutes 0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp minipay-db
+```
+
+Rancher was running with ports `80` and `443` published after privileged mode was enabled.
 mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ minikube start --driver=docker --cpus=4 --memory=4096
 😄  minikube v1.39.0 on Ubuntu 26.04 (kvm/amd64)
 ✨  Using the docker driver based on user configuration

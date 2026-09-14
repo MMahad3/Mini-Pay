@@ -1,3 +1,137 @@
+# Linux Evidence
+
+This document records host-level checks collected from the WSL2 environment used to run Mini-Pay.
+
+## OS and Kernel Identification
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ uname -a
+LOGO=ubuntu-logo
+```
+
+## CPU, Memory, and Disk Utilization
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ nproc
+12
+
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:           7.7Gi       558Mi       7.1Gi       3.5Mi       212Mi       7.2Gi
+Swap:          2.0Gi          0B       2.0Gi
+
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+none            3.9G     0  3.9G   0% /usr/lib/modules/6.18.33.2-microsoft-standard-WSL2
+none            3.9G  4.0K  3.9G   1% /mnt/wsl
+drivers         238G  182G   57G  77% /usr/lib/wsl/drivers
+/dev/sdd       1007G  1.3G  955G   1% /
+none            3.9G   36K  3.9G   1% /mnt/wslg
+none            3.9G     0  3.9G   0% /usr/lib/wsl/lib
+rootfs          3.9G  2.8M  3.9G   1% /init
+none            3.9G   504K  3.9G   1% /run
+none            3.9G     0  3.9G   0% /run/lock
+none            3.9G     0  3.9G   0% /run/shm
+none            3.9G   100K  3.9G   1% /mnt/wslg/versions.txt
+none            3.9G   100K  3.9G   1% /mnt/wslg/doc
+C:\             238G  182G   57G  77% /mnt/c
+D:\             477G  163G  315G  35% /mnt/d
+E:\             443G  367G   77G  83% /mnt/e
+F:\             489G  462G   27G  95% /mnt/f
+G:\             932G  638G  295G  69% /mnt/g
+tmpfs           3.9G     0  3.9G   0% /tmp
+none            1.0M     0  1.0M   0% /run/credentials/systemd-journald.service
+none            1.0M     0  1.0M   0% /run/credentials/systemd-resolved.service
+none            1.0M     0  1.0M   0% /run/credentials/getty@tty1.service
+tmpfs           791M   12K  791M   1% /run/user/1000
+
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ uptime
+22:03:54 up 14 min,  1 user,  load average: 0.04, 0.04, 0.05
+```
+
+## Listening Ports and Processes
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ ss -lntp
+State             Recv-Q            Send-Q                        Local Address:Port                         Peer Address:Port            Process
+LISTEN            0                 4096                          127.0.0.53%lo:53                                0.0.0.0:*
+LISTEN            0                 4096                             127.0.0.54:53                                0.0.0.0:*
+LISTEN            0                 1000                         10.255.255.254:53                                0.0.0.0:*
+```
+
+The process list included WSL system services, Docker Desktop integration processes, and the active shell sessions.
+
+## DNS and Network Connectivity
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ curl -I https://google.com
+HTTP/2 301
+location: https://www.google.com/
+content-type: text/html; charset=UTF-8
+```
+
+The HTTP 301 response confirms outbound HTTPS connectivity and DNS resolution.
+
+## Application and Container Logs
+
+```text
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo docker ps
+CONTAINER ID   IMAGE         COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+bd250f5d6665   postgres:16   "docker-entrypoint.s…"   12 minutes ago   Up 12 minutes   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp   minipay-db
+
+mahad@DESKTOP-BFCF70D:/mnt/g/Paysus/paysys-implementation-l2-assessment$ sudo docker logs --tail=100 bd250f5d6665
+The database system is ready to accept connections
+```
+
+The PostgreSQL container initialized successfully and was listening on port `5432`.
+
+## Highest Memory Consumer
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ ps aux --sort=-%mem | head
+USER         PID %CPU %MEM    VSZ    RSS TTY      STAT START   TIME COMMAND
+mahad       5987  0.0  0.6 1321044 52516 pts/2   Sl   23:21   0:00 kubectl -n minipay port-forward svc/minipay-api 8080:80
+root        1788  0.0  0.3 1287532 29120 pts/3   Ssl+ 22:24   0:02 /run/docker-desktop/docker-desktop-user-distro proxy
+```
+
+The active `kubectl port-forward` process was the largest memory consumer in this sample.
+
+## Disk Usage by Directory
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay$ du -sh */
+16K     app/
+64K     evidence/
+12K     investigation/
+12K     kubernetes/
+12K     sql/
+```
+
+## Repeatable Health Check
+
+The repository includes [`scripts/healthcheck.sh`](../scripts/healthcheck.sh), which checks the API health endpoint and returns a non-zero exit code on failure.
+
+```bash
+#!/usr/bin/env bash
+set -u
+
+URL="${1:-http://localhost:8080/health}"
+
+if curl --fail --silent --show-error --max-time 5 "$URL" >/dev/null; then
+    echo "Health check passed: $URL"
+    exit 0
+fi
+
+echo "Health check failed: $URL" >&2
+exit 1
+```
+
+Example execution:
+
+```text
+mahad@DESKTOP-BFCF70D:~/paysys/Mini-Pay/scripts$ ./healthcheck.sh
+Health check passed: http://localhost:8080/health
+```
 1) OS/kernel identification 
 mahad@DESKTOP-BFCF70D:/mnt/c/WINDOWS/system32$ uname -a
 Linux DESKTOP-BFCF70D 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 GNU/Linux

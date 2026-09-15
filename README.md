@@ -2,7 +2,7 @@
 
 MiniPay is a small FastAPI payment-processing demonstration with a browser UI, API automation, a Python support utility, PostgreSQL-oriented SQL investigations, and a Kubernetes deployment.
 
-This repository is the candidate submission for the Paysys Labs DevOps / Implementation and L2 Support assessment. It is designed to be reproducible by an evaluator and contains implementation, tests, operational evidence, and incident findings.
+This repository is the my submission for the Paysys Labs DevOps / Implementation and L2 Support assessment. It is designed to be reproducible by an evaluator and contains implementation, tests, operational evidence, and incident findings.
 
 ## Quick Start
 
@@ -67,15 +67,3 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for component boundaries and [AI_USAGE.md
 - Rancher was started locally with Docker, but a full Rancher-managed cluster workflow was not completed; the constraint and commands are documented in [evidence/rancher.md](evidence/rancher.md).
 - Evidence records the original WSL environment for traceability. It contains no real credentials or private keys.
 
-## Submission Checklist
-
-Before publishing the repository:
-
-```bash
-git status --short
-git log --oneline --decorate -10
-git tag submission-v1.0
-git push origin main --tags
-```
-
-Confirm that the public repository contains `README.md`, `SETUP.md`, `ARCHITECTURE.md`, `AI_USAGE.md`, tests, evidence, and no `.venv`, tokens, private keys, or personal data. The email submission should include the public URL, your full name, the DevOps Engineer position, a short completion summary, and any limitations above.

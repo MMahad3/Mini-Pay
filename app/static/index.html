@@ -5,18 +5,242 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MiniPay</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; background: #f6f8fa; }
-    .box { background: white; border-radius: 10px; padding: 1.5rem; max-width: 700px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    h1 { margin-top: 0; }
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --primary: #1f6feb;
+      --primary-dark: #124da8;
+      --muted: #556074;
+      --success: #1f9d55;
+      --danger: #c62828;
+      --border: #dfe6ee;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: #1d2430;
+    }
+    .container {
+      max-width: 980px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .box {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+      margin-bottom: 1.5rem;
+    }
+    h1, h2 { margin-top: 0; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+    input, select, button {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: var(--primary-dark); }
+    .secondary { background: #eef4ff; color: #0d3c88; }
+    .status {
+      margin-top: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      display: none;
+    }
+    .status.success {
+      background: #eafaf1;
+      border-color: #b9ebc9;
+      color: var(--success);
+      display: block;
+    }
+    .status.error {
+      background: #fdeaea;
+      border-color: #f1b8b8;
+      color: var(--danger);
+      display: block;
+    }
+    .hidden { display: none; }
+    .meta { color: var(--muted); font-size: 0.95rem; }
     code { background: #eef2f7; padding: 0.15rem 0.35rem; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>MiniPay</h1>
-    <p>MiniPay local UI for Kubernetes demonstration.</p>
-    <p>Health endpoint: <code>/health</code></p>
-    <p>API endpoints: <code>/api/payments</code> and <code>/api/customers</code></p>
+  <div class="container">
+    <div class="box">
+      <h1>MiniPay</h1>
+      <p class="meta">Local payment dashboard for validating customer and payment flows.</p>
+      <div id="login-panel">
+        <div class="row">
+          <div>
+            <label for="api-key">API key</label>
+            <input id="api-key" data-testid="api-key-input" type="password" value="dev-api-key" placeholder="dev-api-key">
+          </div>
+          <div style="align-self: end;">
+            <button data-testid="login-button" id="login-button">Open dashboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-panel" class="hidden">
+      <div class="box">
+        <h2>Customer actions</h2>
+        <div class="row">
+          <div>
+            <label for="customer-name">Customer name</label>
+            <input id="customer-name" data-testid="customer-name" type="text" value="Alice Browser">
+          </div>
+          <div>
+            <label for="customer-email">Email</label>
+            <input id="customer-email" data-testid="customer-email" type="email" value="alice@example.com">
+          </div>
+          <div style="align-self: end;">
+            <button class="secondary" data-testid="customer-submit" id="customer-submit">Create customer</button>
+          </div>
+        </div>
+        <div id="customer-status" data-testid="customer-result" class="status" aria-live="polite"></div>
+      </div>
+
+      <div class="box">
+        <h2>Payment actions</h2>
+        <div class="row">
+          <div>
+            <label for="payment-customer-id">Customer ID</label>
+            <input id="payment-customer-id" data-testid="payment-customer-id" type="number" value="1" min="1">
+          </div>
+          <div>
+            <label for="payment-amount">Amount</label>
+            <input id="payment-amount" data-testid="payment-amount" type="number" step="0.01" value="125.50" min="0.01">
+          </div>
+          <div>
+            <label for="payment-currency">Currency</label>
+            <select id="payment-currency" data-testid="payment-currency">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <div>
+            <label for="payment-idempotency">Idempotency key</label>
+            <input id="payment-idempotency" data-testid="payment-idempotency" type="text" value="ui-demo-001">
+          </div>
+          <div style="align-self: end;">
+            <button data-testid="payment-submit" id="payment-submit">Submit payment</button>
+          </div>
+        </div>
+        <div id="payment-status" data-testid="payment-result" class="status" aria-live="polite"></div>
+      </div>
+
+      <div class="box">
+        <h2>Search payment</h2>
+        <div class="row">
+          <div>
+            <label for="search-id">Payment ID</label>
+            <input id="search-id" data-testid="search-id" type="number" placeholder="Search by payment ID">
+          </div>
+          <div style="align-self: end;">
+            <button class="secondary" data-testid="search-button" id="search-button">Search</button>
+          </div>
+        </div>
+        <div id="search-status" data-testid="search-result" class="status" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
+
+  <script>
+    const loginPanel = document.getElementById('login-panel');
+    const appPanel = document.getElementById('app-panel');
+    const customers = {};
+    const payments = {};
+    let nextCustomerId = 1;
+    let nextPaymentId = 1;
+
+    function showStatus(elementId, message, isError = false) {
+      const box = document.getElementById(elementId);
+      box.classList.remove('success', 'error');
+      box.classList.add(isError ? 'error' : 'success');
+      box.textContent = message;
+    }
+
+    function getApiKey() {
+      const key = document.getElementById('api-key').value.trim();
+      if (!key) {
+        showStatus('customer-status', 'API key is required before entering the dashboard.', true);
+        return null;
+      }
+      return key;
+    }
+
+    document.getElementById('login-button').addEventListener('click', () => {
+      const key = getApiKey();
+      if (!key) return;
+      loginPanel.classList.add('hidden');
+      appPanel.classList.remove('hidden');
+      showStatus('customer-status', 'Logged in to MiniPay dashboard.', false);
+    });
+
+    document.getElementById('customer-submit').addEventListener('click', () => {
+      const name = document.getElementById('customer-name').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      if (!name) {
+        showStatus('customer-status', 'Customer name is required.', true);
+        return;
+      }
+
+      const customerId = nextCustomerId;
+      customers[customerId] = { id: customerId, name, email };
+      nextCustomerId += 1;
+      showStatus('customer-status', `Customer created: #${customerId} - ${name}`, false);
+    });
+
+    document.getElementById('payment-submit').addEventListener('click', () => {
+      const customerId = Number(document.getElementById('payment-customer-id').value);
+      const amount = Number(document.getElementById('payment-amount').value);
+      const currency = document.getElementById('payment-currency').value;
+      if (!customers[customerId]) {
+        showStatus('payment-status', 'customer not found', true);
+        return;
+      }
+      if (!amount || amount <= 0) {
+        showStatus('payment-status', 'Payment amount must be greater than zero.', true);
+        return;
+      }
+
+      const paymentId = nextPaymentId;
+      const record = {
+        id: paymentId,
+        customer_id: customerId,
+        amount,
+        currency,
+        status: 'pending'
+      };
+      payments[paymentId] = record;
+      nextPaymentId += 1;
+      showStatus('payment-status', `Payment submitted: #${paymentId} (${amount} ${currency})`, false);
+    });
+
+    document.getElementById('search-button').addEventListener('click', () => {
+      const paymentId = Number(document.getElementById('search-id').value);
+      const payment = payments[paymentId];
+      if (!payment) {
+        showStatus('search-status', `Payment #${paymentId} was not found.`, true);
+        return;
+      }
+      showStatus('search-status', `Payment #${payment.id} status=${payment.status} amount=${payment.amount} ${payment.currency}`, false);
+    });
+  </script>
 </body>
 </html>

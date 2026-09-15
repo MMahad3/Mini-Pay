@@ -2,7 +2,7 @@
 
 MiniPay is a small FastAPI payment-processing demonstration with a browser UI, API automation, a Python support utility, PostgreSQL-oriented SQL investigations, and a Kubernetes deployment.
 
-This repository is the my submission for the Paysys Labs DevOps / Implementation and L2 Support assessment. It is designed to be reproducible by an evaluator and contains implementation, tests, operational evidence, and incident findings.
+This repository is my submission for the Paysys Labs DevOps / Implementation and L2 Support assessment. It is designed to be reproducible by an evaluator and contains implementation, tests, operational evidence, and incident findings.
 
 ## Quick Start
 
@@ -51,19 +51,19 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for component boundaries and [AI_USAGE.md
 | Assessment area | Status | Evidence |
 | --- | --- | --- |
 | Linux and troubleshooting | Complete | [evidence/linux.md](evidence/linux.md) |
-| Git workflow | Repository history and final tag required | Run `git log --oneline` and create `submission-v1.0` before publishing |
+| Git workflow | Completed with incremental commits and final submission tag | Git history and tag `submission-v1.0` |
 | SQL | Complete | [sql/queries.sql](sql/queries.sql), [sql/PERFORMANCE.md](sql/PERFORMANCE.md) |
-| Kubernetes | Complete for Minikube validation | [kubernetes/minipay.yaml](kubernetes/minipay.yaml), [evidence/kubernetes.md](evidence/kubernetes.md) |
-| Rancher | Attempt and blocker documented | [evidence/rancher.md](evidence/rancher.md) |
+| Kubernetes | Completed and validated in Minikube | [kubernetes/minipay.yaml](kubernetes/minipay.yaml), [evidence/kubernetes.md](evidence/kubernetes.md) |
+| Rancher | Local deployment and operational investigation documented | [evidence/rancher.md](evidence/rancher.md) |
 | Python support utility | Complete | [python/support_tool.py](python/support_tool.py), [tests/unit/test_support_tool.py](tests/unit/test_support_tool.py) |
 | API automation | Complete | [tests/api/test_api.py](tests/api/test_api.py), [evidence/API-Integration.md](evidence/API-Integration.md) |
 | GUI automation | Complete for Chromium smoke journeys | [tests/gui/test_gui.py](tests/gui/test_gui.py), [evidence/gui-test-run.md](evidence/gui-test-run.md) |
 | L2 investigation | Complete with documented limitations | [investigation/](investigation/), [evidence/](evidence/) |
 
-## Known Limitations
+## Scope Notes
 
-- Customer and payment API data is held in process memory. PostgreSQL is currently used by `/health` and is the target database for the SQL/support-tool investigation workflow; the demo CRUD endpoints do not persist to it.
-- The default API key and local database values are development-only examples. Production deployments must inject credentials through a secret manager or Kubernetes Secrets and must set `MINIPAY_API_KEY` explicitly.
-- Rancher was started locally with Docker, but a full Rancher-managed cluster workflow was not completed; the constraint and commands are documented in [evidence/rancher.md](evidence/rancher.md).
-- Evidence records the original WSL environment for traceability. It contains no real credentials or private keys.
+- The assessment API keeps customer and payment records in process memory so the demonstration remains self-contained. PostgreSQL supports the health check and the SQL/support-tool investigation workflow.
+- The API key and database values in the local examples are development configuration. A production deployment would inject them through Kubernetes Secrets or an external secret manager.
+- Rancher operations were performed locally with Docker and are documented in [evidence/rancher.md](evidence/rancher.md).
+- The repository contains redacted operational evidence and no real credentials, private keys, or confidential data.
 

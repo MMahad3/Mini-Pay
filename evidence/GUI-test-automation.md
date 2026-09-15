@@ -4,10 +4,7 @@
 
 The MiniPay browser UI is served by the FastAPI application at `http://localhost:8000`. The UI provides controls for dashboard login, customer creation, payment submission, and payment search.
 
-![MiniPay UI screenshot](../Picture-Proofs/minipay-ui.png)
-
-The screenshot above is the visual proof of the MiniPay application UI. Save the screenshot as `Picture-Proofs/minipay-ui.png` so the reference resolves correctly.
-
+The screenshot in /Picture-Proofs/'Minipay Gui.png' is the visual proof of the MiniPay application UI.
 ## Automation Framework
 
 The GUI tests use Playwright with Chromium. The test implementation is available in [`tests/gui/test_gui.py`](../tests/gui/test_gui.py), and the run instructions are documented in [`tests/gui/README.md`](../tests/gui/README.md).

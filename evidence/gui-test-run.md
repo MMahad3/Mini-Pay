@@ -5,7 +5,7 @@
 Executed from Ubuntu WSL2 in the project virtual environment:
 
 ```bash
-cd /home/mahad/paysys/Mini-Pay
+cd /path/to/Mini-Pay
 . .venv/bin/activate
 PYTHONPATH=. python -m pytest tests/gui/test_gui.py -q --maxfail=1
 ```

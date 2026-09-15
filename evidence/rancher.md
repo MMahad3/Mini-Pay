@@ -4,7 +4,7 @@ This document records the Docker and Rancher startup investigation performed alo
 
 ## Evidence Context
 
-The commands were run locally by user `mahad` on host `DESKTOP-BFCF70D` from `/mnt/g/Paysus/paysys-implementation-l2-assessment`. The complete original session transcript is preserved below so the shell prompt, working directory, command history, and raw Docker output remain traceable.
+The commands were run locally under Ubuntu WSL2. Host-specific identity details and unrelated source paths have been redacted while preserving the command sequence and raw Docker output.
 
 ## Initial Minikube and Docker Permission Failure
 

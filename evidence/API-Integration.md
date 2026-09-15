@@ -4,7 +4,7 @@ This document records the environment setup, dependency resolution, and final ve
 
 ## Evidence Context
 
-The commands below were executed in the MiniPay project directory under Ubuntu WSL2, in the user context `mahad` on host `DESKTOP-BFCF70D`.
+The commands below were executed in the MiniPay project directory under Ubuntu WSL2. Host-specific identity details have been redacted.
 
 ## Python Environment Setup
 

@@ -4,7 +4,7 @@ This document records host-level checks collected from the WSL2 environment used
 
 ## Evidence Context
 
-The commands were run locally by user `mahad` on host `DESKTOP-BFCF70D` in Ubuntu under WSL2. The evidence includes commands run from `/mnt/c/WINDOWS/system32`, `/mnt/g/Paysus/paysys-implementation-l2-assessment`, and `~/paysys/Mini-Pay` so the original session and filesystem context remain traceable.
+The commands were run locally under Ubuntu WSL2. Host-specific identity details and unrelated source paths have been redacted while preserving the technical outputs.
 
 ## OS and Kernel
 
@@ -92,6 +92,13 @@ server: gws
 ```
 
 The HTTP 301 response confirms outbound HTTPS connectivity and DNS resolution.
+
+## Investigation playbook
+
+- **High CPU:** identify the process with `top`, `ps -eo pid,ppid,cmd,%cpu --sort=-%cpu`, and application/container metrics; inspect logs and recent deploys before profiling or restarting.
+- **Low disk space:** run `df -h`, `du -xhd1`, and inspect container/image/log growth; rotate or remove verified disposable artifacts, then extend storage or add retention controls.
+- **Unreachable API:** verify DNS and listening ports, check Service endpoints and pod readiness, use `curl` locally and through the Service, then inspect probes, routes, firewall rules, and logs.
+- **Repeatedly terminating process:** check exit code and `kubectl describe pod`, inspect logs from the current and previous container, verify configuration/secrets/resources, and reproduce with the same image and command before changing restart policy.
 
 ## Docker and Application Logs
 

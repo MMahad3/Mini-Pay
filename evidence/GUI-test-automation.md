@@ -24,7 +24,7 @@ The test suite validates:
 
 ## Test Environment
 
-The tests were executed in Ubuntu WSL2 from the project Python virtual environment.
+The tests were executed in Ubuntu WSL2 from the project Python virtual environment. Host-specific identity details are omitted.
 
 ## Test Command
 

@@ -4,7 +4,7 @@ This document records the commands and output used to build, deploy, troubleshoo
 
 ## Evidence Context
 
-The commands were run locally by user `mahad` on host `DESKTOP-BFCF70D` from `~/paysys/Mini-Pay`. The complete original session transcript is preserved below so the shell prompt, working directory, command history, and raw output remain traceable.
+The commands were run locally under Ubuntu WSL2 from the MiniPay project directory. Host-specific identity details have been redacted while preserving the command sequence and raw operational output.
 
 ## Build the Application Image
 
